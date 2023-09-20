@@ -1,0 +1,86 @@
+.profile-image {
+   
+    width: 150px;
+    height: 150px;
+    border: 3px solid #1877F2; /* Couleur du cadre similaire à Facebook */
+    border-radius: 20%; /* Crée le cadre circulaire */
+    overflow: hidden; /* Masque tout contenu qui dépasse du cadre */
+    margin: 0 auto; /* Centre l'image horizontalement */
+    text-align: center; /* Centre l'image verticalement */
+    margin-bottom: 10px;
+    margin-top: 20px;
+  }
+  
+  .profile-image img {
+    width: 100%;
+    height: auto;
+    margin: 0 auto; /* Centre l'image horizontalement */
+    display: block; /* Pour ajuster la marge automatique */
+
+  }
+
+  /* ... Autres styles ... */
+.vertical-bar {
+    border-left: 3px solid black; /* Couleur de la barre verticale */
+    height: 100%; /* Hauteur de la barre égale à la hauteur du contenu */
+    margin-top: 15px; /* Espacement au-dessus de la barre */
+    margin-bottom: 15px; /* Espacement en dessous de la barre */
+  }
+  /* ... autres styles ... */
+
+.card-header {
+    display: flex;
+     justify-content: center; 
+    align-items: center;
+}
+
+
+.card-head {
+
+ width: max-content;
+ height: max-content;
+}
+
+
+.icon {
+    font-size: 20px;
+    margin-left: 10px;
+}
+
+.card-divider {
+    height: 1px;
+    background-color: #ddd;
+    margin: 10px 0;
+}
+
+
+/* ... autres styles ... */
+
+.card-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.card {
+    width: calc(33.33% - 20px); /* Pour afficher 3 cartes par ligne */
+    /* Autres styles de la carte... */
+}
+
+/* ... autres styles ... */
+
+/* ... autres styles ...  position: fixed; top: 20px; right: 20px;*/
+.head{ 
+  position: fixed;
+}
+
+.export {
+
+  float: right;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+  

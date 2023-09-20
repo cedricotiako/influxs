@@ -1,0 +1,17 @@
+{
+    "name": "user/influxs",
+    "autoload": {
+        "psr-4": {
+            "User\\Influxs\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "cedricotiako",
+            "email": "125552871+cedricotiako@users.noreply.github.com"
+        }
+    ],
+    "require": {
+        "phpoffice/phpspreadsheet": "^1.29"
+    }
+}
