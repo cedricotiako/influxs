@@ -3,9 +3,13 @@
 
 class ConnectMySQLDB {
     private $pdo;
-
+             //$bd=new ConnectMySQLDB('localhost','inflfiel_social_traking','inflfiel_UserSocial',')6WZghEwCWTN');
     public function __construct($host, $dbname, $username, $password) {
         try {
+            $host='localhost';
+            $dbname='inflfiel_social_traking';
+            $username='inflfiel_UserSocial';
+            $password=')6WZghEwCWTN';
             $this->pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password,array(
                 PDO::ATTR_PERSISTENT => true,
                 PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'
