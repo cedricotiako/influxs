@@ -112,27 +112,26 @@ p {
     padding: 20px;
   }
 
+  .search-form {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f2f2f2;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    padding: 8px;
+    width: 80%;
+    margin: 0 auto;
+  }
   
-.search-form {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #f2f2f2;
-  border: 1px solid #ccc;
-  border-radius: 20px;
-  padding: 8px;
-  width: 80%;
-  margin: 0 auto;
-}
-
-
-
-.search-form
-{
-  justify-content: center;
-  align-items: center; 
-}
-
+  
+  
+  .search-form
+  {
+    justify-content: center;
+    align-items: center; 
+  }
+  
 
   </style>
 </head>
@@ -150,7 +149,7 @@ p {
     
 
 
-  <h1 class="container">Liste des Campagnes</h1>
+  <h1 class="container">Liste des Platforms</h1>
   <div class="campaigns-list">
   <form id="search-form" class="search-form" >
                       <input type="text" id="search-input" style="border: none; outline: none; background: none; flex: 1; padding: 6px; font-size: 14px;" placeholder="Rechercher un influenceur...">
@@ -168,7 +167,7 @@ p {
     //$bd=new ConnectMySQLDB('localhost','inflfiel_social_traking','inflfiel_UserSocial',')6WZghEwCWTN');
 
     // Requête SELECT
-    $sql = "SELECT id,`name`,`start_date`,`end_date` FROM `campaigns` WHERE `company_id`=1";
+    $sql = "SELECT id,`name`,created_at as `start_date` FROM `platforms`";
     $result = $bd->executeCustomQuery($sql);
 
     // Parcours des lignes de résultat avec foreach
@@ -176,14 +175,13 @@ p {
         $id=$row['id'];
         $name = $row['name'];
         $startDate = $row['start_date'];
-        $endDate = $row['end_date'];
+       
         ?>
         <!-- Affichage de chaque campagne -->
-        <a href="details_campaign.php?campaign_id=<?=$id?>" class="card-link"> 
+        <a href="details_plateforme.php?platform_id=<?=$id?>" class="card-link"> 
             <div class="card">
-                <h2>Nom: <strong class="campaign-name"><?php echo $name; ?></strong> </h2>
+            <h2>Nom: <strong class="platform-name"><?php echo $name; ?></strong> </h2>
                 <p>Date de début: <?php echo $startDate; ?></p>
-                <!-- <p>Date de fin: <?php echo $endDate; ?></p> -->
             </div>
         </a>
 
@@ -196,7 +194,6 @@ p {
 
 
   </div>
-
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
@@ -204,7 +201,7 @@ $(document).ready(function() {
     $('#search-input').on('input', function() {
         var searchTerm = $(this).val().toLowerCase();
         $('.card').each(function() {
-            var influencerName = $(this).find('.campaign-name').text().toLowerCase();
+            var influencerName = $(this).find('.platform-name').text().toLowerCase();
             if (influencerName.includes(searchTerm)) {
                 $(this).show();
             } else {
@@ -214,5 +211,6 @@ $(document).ready(function() {
     });
 });
 </script>
+
 </body>
 </html>

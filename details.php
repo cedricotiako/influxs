@@ -182,6 +182,43 @@ body {
         }
 
 
+
+        
+.sidebar {
+    width: 125px;
+    height: 100%;
+    background-color: #f1f1f1;
+    position: fixed;
+    left: 0;
+    top: 0;
+  }
+  
+  .sidebar ul {
+
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    padding: 10px;
+  }
+  
+  .sidebar li {
+    padding: 10px;
+    width: 100;
+    height: auto;
+  }
+  
+  .sidebar li a {
+    text-decoration: none;
+    color: #000;
+  }
+  
+  .content {
+    margin-left: 125px;
+
+    padding: 20px;
+  }
+
+
     </style>
 </head>
 <body>
@@ -568,24 +605,23 @@ function separateurMilliers($nombre) {
         // print_r(json_encode($matrix));
               ?>
 
-               
+<div class="sidebar">
+    <ul>
+      <li><a href="index.php">Accueil</a></li>
+      <li><a href="campaign.php">Campagne</a></li>
+       <li><a href="plateforme.php">Plateforme</a></li>
+      <li><a href="produit.php">Produit</a></li> 
+    </ul>
+  </div>
+  <div class="content">
+   
+    
 
 <section  class="influencers-section">
   
     <div style="background-color: #d3d3d3" class="container">
        
-<!--                <h2 class="mb-4">-->
-<!--              <a href="index.php" style="font-size: 50px; font-weight: bold; color: black; text-decoration: none;">⇦</a> Liste des Influenceurs-->
-<!--              -->
-<!--                </h2>-->
-<!---->
-<!--        <header style="background-color: #5095f3;border-radius: 20px">-->
-<!--            <h2  class="mb-4">-->
-<!--                <a href="index.php" style="font-size: 50px; font-weight: bold; color: white; text-decoration: none;">-->
-<!--                    <img width="100" height="100" src="./previous.png">-->
-<!--                </a> Liste des Influenceurs-->
-<!--            </h2>-->
-<!--        </header>-->
+
 
         <div style="text-align: left" class="custom-header">
             <a href="index.php" class="back-link">⇦ Liste des Influenceurs</a>
@@ -603,15 +639,7 @@ function separateurMilliers($nombre) {
                         <img  style=" border-radius: 50%;width:100px;height: 100px" src="<?php echo $influencer[0]['images']?'https://bo.influxs.live/BO/_lib/file/img/'.$influencer[0]['images']:'images/profil.png'; ?>" alt="Profile Image">
                     </div>
                     <h3><?php echo $influencer[0]['full_name']; ?></h3>
-                    <!-- <div class="info">
-                        <h3><?php echo $influencer[0]['full_name']; ?></h3>
-                        <a href="tel:<?php echo $influencer[0]['phone']; ?>">
-                            <i class="fas fa-phone icon"></i><?php echo $influencer[0]['phone']; ?>
-                        </a>
-                        <a href="mailto:<?php echo $influencer[0]['email']; ?>">
-                            <i class="fas fa-envelope icon"></i><?php echo $influencer[0]['email']; ?>
-                        </a>
-                    </div> -->
+
                     <br>
                     <br>
                     <form class="mb-4" method="POST" action="">
@@ -1054,7 +1082,7 @@ function separateurMilliers($nombre) {
     
 </section>
 
-
+</div>  
 
 <script>
     $(document).ready(function() {

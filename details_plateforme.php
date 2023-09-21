@@ -227,10 +227,10 @@ function separateurMilliers($nombre) {
     return number_format($nombre, 0, ',', ' ');
 }
             // Vérifiez d'abord si l'ID est présent dans la requête GET
-            if(isset($_GET['campaign_id'])) 
+            if(isset($_GET['platform_id'])) 
             {
                 // Récupérez l'ID depuis la requête GET
-                $campaign_id = $_GET['campaign_id'];
+                $platform_id = $_GET['platform_id'];
                 $date_debut=null;
                 $date_fin=null; 
                 
@@ -241,16 +241,16 @@ function separateurMilliers($nombre) {
              //$bd=new ConnectMySQLDB('localhost','inflfiel_social_traking','inflfiel_UserSocial',')6WZghEwCWTN');
                 $query_nbr_abonner="SELECT influenceur_name, Facebook, Instagram, Tiktok, Twitter, YouTube, Ayoba
                 FROM total_abonner
-                WHERE campaign_id= $campaign_id;";
+                WHERE influenceur_id = $platform_id;";
 
-               $query_objectif_influenceur = "SELECT * FROM objectif_influenceur  WHERE campaign_id= $campaign_id";
+               $query_objectif_influenceur = "SELECT * FROM objectif_influenceur  WHERE influenceur_id = $platform_id";
 
-                $query = "SELECT * FROM campaigns WHERE id=$campaign_id and company_id=1";
+                $query = "SELECT * FROM campaigns WHERE id=$platform_id and company_id=1";
                 // var_dump($query);
-                $query_engagement= "SELECT value FROM vue_engagement_influenceurs WHERE influenceur_id=$campaign_id";
+                $query_engagement= "SELECT value FROM vue_engagement_influenceurs WHERE influenceur_id=$platform_id";
                 $query_kpi="SELECT COUNT(*) AS kpi
                 FROM vue_max_actions_details
-                WHERE campaign_id= $campaign_id and publication_date > '2023-01-01'";
+                WHERE platform_id = $platform_id and publication_date > '2023-01-01'";
 
                 $query_table="SELECT
                 i.name AS influenceur,
@@ -259,7 +259,7 @@ function separateurMilliers($nombre) {
                 k.label AS kpi,
                 SUM(ad.value) AS total_value,
                 a.text ,
-                p.name AS Canal_de_publication,
+                pd.name AS products,
                 cp.name AS company,a.link
                 FROM actions_details AS ad
                 JOIN kpis AS k ON ad.kpi_id = k.id
@@ -269,19 +269,21 @@ function separateurMilliers($nombre) {
                 JOIN contracts AS c ON a.contract_id = c.id
                 JOIN influencers AS i ON c.influenceur_id = i.id
                 JOIN platforms AS p ON a.platform_id = p.id
-                WHERE cp.id=$campaign_id and a.publication_date > '2023-01-01'
-                GROUP BY i.name, a.publication_date, at.name, k.label, a.text, p.name, cp.name,a.link  ";
+                JOIN products AS pd ON a.product_id = pd.id
+                WHERE p.id=$platform_id and a.publication_date > '2023-01-01'
+                GROUP BY i.name, a.publication_date, at.name, k.label, a.text, pd.name, cp.name,a.link  ";
 
                 $sql = "SELECT SUM(v.value) AS nombre_details, k.label AS nom_kpi
                 FROM vue_max_actions_details v
                 JOIN kpis k ON v.kpi_id = k.id
-                WHERE v.campaign_id= $campaign_id and k.companies_id=1 and v.publication_date > '2023-01-01'
+                WHERE v.platform_id= $platform_id and k.companies_id=1 and v.publication_date > '2023-01-01'
                 GROUP BY v.influenceur_id, v.kpi_id";
 
                 $sql_chat_1 = "SELECT p.name AS platform, SUM(v.value) AS value
                         FROM vue_max_actions_details v
-                        INNER JOIN platforms p ON p.id = v.platform_id
-                        WHERE v.campaign_id = $campaign_id and v.publication_date > '2023-01-01'
+                        
+                        INNER JOIN campaigns p ON p.id = v.campaign_id 
+                        WHERE v.platform_id = $platform_id and v.publication_date > '2023-01-01'
                         GROUP BY p.name;
                         ";
 
@@ -289,33 +291,33 @@ function separateurMilliers($nombre) {
                 FROM vue_max_actions_details v
                 INNER JOIN influencers c ON
                   c.id = v.`influenceur_id`
-                WHERE v.campaign_id = $campaign_id and v.publication_date > '2023-01-01'
+                WHERE v.platform_id = $platform_id and v.publication_date > '2023-01-01'
                 GROUP BY c.name;
                 ";
 
                 $sql_chat_3="SELECT p.name AS produit, SUM(v.value) AS value
                 FROM vue_max_actions_details v
                 INNER JOIN products p ON p.id = v.product_id
-                WHERE v.campaign_id = $campaign_id and v.publication_date > '2023-01-01'
+                WHERE v.platform_id = $platform_id and v.publication_date > '2023-01-01'
                 GROUP BY p.name;";
 
                 $sql_chat_4=
                 "SELECT cp.name AS campagne, COUNT(*) AS kpi
                 FROM vue_max_actions_details v
                 JOIN influencers AS cp ON v.influenceur_id = cp.id
-                WHERE v.campaign_id = $campaign_id and v.publication_date > '2023-01-01'
+                WHERE v.platform_id = $platform_id and v.publication_date > '2023-01-01'
                 GROUP BY cp.name";
 
                 $sql_chat_5="SELECT p.name AS platform, COUNT(*) AS kpi
                 FROM vue_max_actions_details v
-                JOIN platforms AS p ON v.platform_id = p.id
-                WHERE v.campaign_id = $campaign_id and v.publication_date > '2023-01-01'
-                 GROUP BY v.platform_id";
+                INNER JOIN campaigns p ON p.id = v.campaign_id 
+                WHERE v.platform_id = $platform_id and v.publication_date > '2023-01-01'
+                 GROUP BY v.campaign_id";
 
                 $sql_chat_6="SELECT p.name AS produit, COUNT(*) AS kpi
                 FROM vue_max_actions_details v
                 INNER JOIN products p ON p.id = v.product_id
-                WHERE v.campaign_id = $campaign_id and v.publication_date > '2023-01-01'
+                WHERE v.platform_id = $platform_id and v.publication_date > '2023-01-01'
                 GROUP BY p.name;";
 
 
@@ -328,7 +330,7 @@ function separateurMilliers($nombre) {
                  // Requête pour obtenir le nombre total de KPIs pour l'influenceur
                 $query_kpi = "SELECT COUNT(*) AS kpi
                 FROM vue_max_actions_details
-                WHERE campaign_id= $campaign_id
+                WHERE platform_id = $platform_id
                 AND (publication_date BETWEEN '$date_debut' AND '$date_fin' OR date_j BETWEEN '$date_debut' AND '$date_fin')";
 
                 // Requête pour obtenir les détails d'actions avec filtres de dates
@@ -339,7 +341,7 @@ function separateurMilliers($nombre) {
                 k.label AS kpi,
                 SUM(ad.value) AS total_value,
                 a.text,
-                p.name AS Canal_de_publication,
+                pd.name AS products,
                 cp.name AS company,a.link
                 FROM actions_details AS ad
                 JOIN kpis AS k ON ad.kpi_id = k.id
@@ -349,23 +351,25 @@ function separateurMilliers($nombre) {
                 JOIN contracts AS c ON a.contract_id = c.id
                 JOIN influencers AS i ON c.influenceur_id = i.id
                 JOIN platforms AS p ON a.platform_id = p.id
-                WHERE cp.id = $campaign_id
+                JOIN products AS pd ON a.product_id = pd.id
+                WHERE p.id = $platform_id
                 AND (a.publication_date BETWEEN '$date_debut' AND '$date_fin')
-                GROUP BY i.name, a.publication_date, at.name, k.label, a.text, p.name, cp.name,a.link";
+                GROUP BY i.name, a.publication_date, at.name, k.label, a.text, pd.name, cp.name,a.link";
 
                 // Autres requêtes similaires avec les mêmes conditions de date
                 $sql = "SELECT SUM(v.value) AS nombre_details, k.label AS nom_kpi
                 FROM vue_max_actions_details v
                 JOIN kpis k ON v.kpi_id = k.id
-                WHERE v.campaign_id= $campaign_id and k.companies_id=1
+                WHERE v.platform_id= $platform_id and k.companies_id=1
                 AND (v.publication_date BETWEEN '$date_debut' AND '$date_fin' OR v.date_j BETWEEN '$date_debut' AND '$date_fin')
                 GROUP BY v.influenceur_id, v.kpi_id";
 
                 // Pour le chat 1
                 $sql_chat_1 = "SELECT p.name AS platform, SUM(v.value) AS value
                 FROM vue_max_actions_details v
-                INNER JOIN platforms p ON p.id = v.platform_id
-                WHERE v.campaign_id = $campaign_id 
+                INNER JOIN campaigns p ON p.id = v.campaign_id 
+               
+                WHERE v.platform_id = $platform_id 
                 AND (v.publication_date BETWEEN '$date_debut' AND '$date_fin' OR v.date_j BETWEEN '$date_debut' AND '$date_fin')
                 GROUP BY p.name";
 
@@ -374,7 +378,7 @@ function separateurMilliers($nombre) {
                 FROM vue_max_actions_details v
                 INNER JOIN influencers c ON
                   c.id = v.`influenceur_id`
-                WHERE v.campaign_id = $campaign_id
+                WHERE v.platform_id = $platform_id
                 AND (v.publication_date BETWEEN '$date_debut' AND '$date_fin' OR v.date_j BETWEEN '$date_debut' AND '$date_fin')
                 GROUP BY c.name";
 
@@ -382,7 +386,7 @@ function separateurMilliers($nombre) {
                 $sql_chat_3 = "SELECT p.name AS produit, SUM(v.value) AS value
                 FROM vue_max_actions_details v
                 INNER JOIN products p ON p.id = v.product_id
-                WHERE v.campaign_id = $campaign_id
+                WHERE v.platform_id = $platform_id
                 AND (v.publication_date BETWEEN '$date_debut' AND '$date_fin' OR v.date_j BETWEEN '$date_debut' AND '$date_fin')
                 GROUP BY p.name";
 
@@ -390,23 +394,23 @@ function separateurMilliers($nombre) {
                 $sql_chat_4 = "SELECT cp.name AS campagne, COUNT(*) AS kpi
                 FROM vue_max_actions_details v
                 JOIN influencers AS cp ON v.influenceur_id = cp.id
-                WHERE v.campaign_id = $campaign_id 
+                WHERE v.platform_id = $platform_id 
                 AND (v.publication_date BETWEEN '$date_debut' AND '$date_fin' OR v.date_j BETWEEN '$date_debut' AND '$date_fin')
                 GROUP BY v.campaign_id";
 
                 // Pour le chat 5
                 $sql_chat_5 = "SELECT p.name AS platform, COUNT(*) AS kpi
                 FROM vue_max_actions_details v
-                JOIN platforms AS p ON v.platform_id = p.id
-                WHERE v.campaign_id = $campaign_id 
+                INNER JOIN campaigns p ON p.id = v.campaign_id 
+                WHERE v.platform_id = $platform_id 
                 AND (v.publication_date BETWEEN '$date_debut' AND '$date_fin' OR v.date_j BETWEEN '$date_debut' AND '$date_fin')
-                GROUP BY v.platform_id";
+                GROUP BY v.campaign_id";
 
                 // Pour le chat 6
                 $sql_chat_6 = "SELECT p.name AS produit, COUNT(*) AS kpi
                 FROM vue_max_actions_details v
                 INNER JOIN products p ON p.id = v.product_id
-                WHERE v.campaign_id = $campaign_id
+                WHERE v.platform_id = $platform_id
                 AND (v.publication_date BETWEEN '$date_debut' AND '$date_fin' OR v.date_j BETWEEN '$date_debut' AND '$date_fin')
                 GROUP BY p.name";
 
@@ -418,10 +422,10 @@ function separateurMilliers($nombre) {
                 $influencer =$bd->executeCustomQuery($query);
                 $table=$bd->executeCustomQuery($query_table);
                 $total_engagement=$bd->executeCustomQuery($query_engagement);
-                //$nbr_abonner=$bd->executeCustomQuery($query_nbr_abonner)[0]??null;
-               //   $objectif_influenceur=$bd->executeCustomQuery($query_objectif_influenceur)[0]??null;
+                $nbr_abonner=$bd->executeCustomQuery($query_nbr_abonner)[0]??null;
+                  $objectif_influenceur=$bd->executeCustomQuery($query_objectif_influenceur)[0]??null;
                // var_dump($nbr_abonner);
-                // Maintenant vous pouvez utiliser $campaign_id pour effectuer des opérations basées sur l'ID, par exemple interroger la base de données ou afficher des détails spécifiques à l'influenceur avec cet ID
+                // Maintenant vous pouvez utiliser $platform_id pour effectuer des opérations basées sur l'ID, par exemple interroger la base de données ou afficher des détails spécifiques à l'influenceur avec cet ID
               
                
 
@@ -630,7 +634,7 @@ function separateurMilliers($nombre) {
 
 
         <?php echo ($date_debut!=null && $date_fin!=null)?" de <strong style='color:blue'> $date_debut </strong > à <strong style='color:blue'> $date_fin</strong>":""; ?>
-                <form action="export.php?id=<?=$campaign_id?>&dateDebut=<?=$date_debut?>&dateFin=<?=$date_fin?>" method="post">
+                <form action="export.php?id=<?=$platform_id?>&dateDebut=<?=$date_debut?>&dateFin=<?=$date_fin?>" method="post">
                     <button class="export" type="submit">Exporter</button>
                 </form>
     
@@ -794,7 +798,8 @@ function separateurMilliers($nombre) {
                     <th>KPI</th>
                     <th>Valeur totale</th>
                     <th>Texte</th>
-                    <th>Canal de publication</th>
+                    <th>Produit</th>
+                    <th>Campagne</th>
                     <th>Lien</th>
                 </tr>
             </thead>
@@ -812,8 +817,8 @@ function separateurMilliers($nombre) {
                         <td><?=$val['kpi']?></td>
                         <td><?=separateurMilliers($val['total_value'])?></td>
                         <td><?=$val['text']?></td>
-                        <td><?=$val['Canal_de_publication']?></td>
-                        
+                        <td><?=$val['products']?></td>
+                        <td><?=$val['company']?></td>
                         <td><a href="<?=$val['link']?>" target="_blank">Lien Vers La publication </a></td>
                         </tr>
                        
@@ -910,7 +915,7 @@ console.log(engagementData)
         data: {
             labels: labels,
             datasets: [{
-                label: "Engagement par plateforme",
+                label: "Engagement par campagnes",
                 data: values,
                 backgroundColor: "rgba(75, 192, 192, 0.2)",
                 borderColor: "rgba(75, 192, 192, 1)",
@@ -1041,7 +1046,7 @@ new Chart(ctx, {
             data: {
                 labels: campagnes,
                 datasets: [{
-                    label: 'Nombre d\'action par plateforme',
+                    label: 'Nombre d\'action par campagnes',
                     data: valeurs,
                     backgroundColor: 'rgba(54, 39, 245, 0.2)',
                     borderColor: 'rgba(54, 39, 245, 1)',

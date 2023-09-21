@@ -84,3 +84,32 @@
   cursor: pointer;
 }
   
+
+.sidebar {
+  width: 200px;
+  height: 100%;
+  background-color: #f1f1f1;
+  position: fixed;
+  left: 0;
+  top: 0;
+}
+
+.sidebar ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar li {
+  padding: 10px;
+}
+
+.sidebar li a {
+  text-decoration: none;
+  color: #000;
+}
+
+.content {
+  margin-left: 200px;
+  padding: 20px;
+}
