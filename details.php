@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+   <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Lien vers Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
@@ -219,6 +219,106 @@ body {
   }
 
 
+  
+.filter-form {
+  display: flex;
+  flex-direction: row;
+  max-width: 80%;
+  margin: 0 auto;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.search-form
+{
+  justify-content: center;
+  align-items: center; 
+}
+
+
+
+
+
+.form-group {
+  margin-left: 20px;
+  float: left;
+  width: 200px;
+}
+
+label {
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 5px;
+}
+
+
+
+input[type="date"],
+select,
+.apply-button {
+  width: 100%;
+  height: 40px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #f2f2f2;
+  color: #333333;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box; /* Ajout de la boîte de dimensionnement */
+  margin-top: 10px; /* Ajout de l'espacement supplémentaire */
+}
+
+input[type="date"]:hover,
+select:hover {
+  border-color: #999999;
+}
+
+input[type="date"]:focus,
+select:focus {
+  outline: none;
+  border-color: #999999;
+  box-shadow: 0 0 5px rgba(153, 153, 153, 0.5);
+}
+
+
+
+
+.search-form {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f2f2f2;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  padding: 8px;
+  width: 80%;
+  margin: 0 auto;
+}
+
+
+.apply-button {
+
+  color: #fff;
+  /* border-radius: 4px;
+  transition: border-color 0.3s ease;  */
+   margin-top: 5%;
+  background-color: #007bff;
+  /* border: 1px solid #ccc;
+  color: #fff;
+  border: none;
+  height: 40px; 
+  border: 1px solid #ccc;
+  margin-left: 10px;
+  border-radius: 4px;
+  background-color: #007bff;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  transition: border-color 0.3s ease; */
+}
+
     </style>
 </head>
 <body>
@@ -233,8 +333,8 @@ function separateurMilliers($nombre) {
             if(isset($_GET['id'])) {
                 // Récupérez l'ID depuis la requête GET
                 $influencerId = $_GET['id'];
-                $date_debut=null;
-                $date_fin=null; 
+                $date_debut='2023-01-01';
+                $date_fin=date("Y-m-d"); 
                 
                 require_once('ConnectMySQLDB.php');
     
@@ -319,7 +419,7 @@ function separateurMilliers($nombre) {
                 GROUP BY p.name;";
 
 
-               if($_SERVER["REQUEST_METHOD"] === "POST") {
+               if(isset($_POST["dateFilter"]) && !empty($_POST["dateFilter"])) {
                 // Récupération des valeurs soumises du formulaire
                 $date_debut = $_POST["dateDebut"];
                 $date_fin = $_POST["dateFin"];
@@ -410,6 +510,183 @@ function separateurMilliers($nombre) {
                 GROUP BY p.name";
 
                }
+
+               $query_action="SELECT
+               SUM(v.value) AS val,
+               k.`name` AS nom_actions
+           FROM
+               vue_max_actions_details v
+           JOIN actions_types k ON
+               v.reaction_type_id = k.id
+           JOIN campaigns AS cp
+           ON
+               v.campaign_id = cp.id
+           JOIN platforms AS p
+           ON
+               v.platform_id = p.id
+           JOIN products AS pr
+           ON
+               v.product_id = pr.id
+             WHERE v.influenceur_id = $influencerId 
+              AND (v.publication_date BETWEEN '$date_debut' AND '$date_fin' OR v.date_j BETWEEN '$date_debut' AND '$date_fin')
+           GROUP BY
+               v.influenceur_id,
+               v.reaction_type_id;";
+
+               
+        if(isset($_POST['goFilter'])) 
+        {
+    
+            $campaigns = (isset($_POST['campaigns']) && !empty($_POST['campaigns']))? $_POST['campaigns']:NULL;
+            $platform = (isset($_POST['platform']) && !empty($_POST['platform']))? $_POST['platform']:NULL;
+            $prodruit = (isset($_POST['prodruit']) && !empty($_POST['prodruit']))? $_POST['prodruit']:NULL; 
+            $date = (isset($_POST['date']) && !empty($_POST['date']))? $_POST['date'] :'2023-01-01';
+        
+            $query_campaigns="0";
+            if($campaigns!=NULL) 
+            $query_campaigns= " cp.id=$campaigns ";
+            
+            $query_prodruit="0";
+            if($prodruit!=NULL)
+            $query_prodruit= " pr.id=$prodruit ";
+        
+            $query_platform="0";
+            if($platform!=NULL)
+            $query_platform= " p.id=$platform ";
+        
+          
+
+
+
+
+             // Requête pour obtenir le nombre total de KPIs pour l'influenceur
+             $query_kpi = "SELECT COUNT(*) AS kpi
+             FROM vue_max_actions_details v
+             JOIN campaigns AS cp ON v.campaign_id = cp.id
+             JOIN platforms AS p ON v.platform_id = p.id
+             JOIN products AS pr ON v.product_id = pr.id
+             WHERE v.influenceur_id = $influencerId AND ($query_prodruit OR $query_campaigns OR $query_platform)
+             AND (v.publication_date BETWEEN '$date_debut' AND '$date_fin' OR v.date_j BETWEEN '$date_debut' AND '$date_fin')";
+
+             // Requête pour obtenir les détails d'actions avec filtres de dates
+             $query_table = "SELECT
+             i.name AS influenceur,
+             a.publication_date AS date_de_publication,
+             at.name AS type_d_action,
+             k.label AS kpi,
+             SUM(ad.value) AS total_value,
+             a.text,
+             p.name AS Canal_de_publication,
+             cp.name AS company,a.link
+             FROM actions_details AS ad
+             JOIN kpis AS k ON ad.kpi_id = k.id
+             JOIN actions AS a ON ad.action_id = a.id
+             JOIN campaigns AS cp ON a.campaign_id = cp.id
+             JOIN actions_types AS at ON a.reaction_type_id = at.id
+             JOIN contracts AS c ON a.contract_id = c.id
+             JOIN influencers AS i ON c.influenceur_id = i.id
+             JOIN platforms AS p ON a.platform_id = p.id
+             JOIN products AS pr ON a.product_id = pr.id
+             WHERE influenceur_id = $influencerId
+             AND (a.publication_date BETWEEN '$date_debut' AND '$date_fin') AND ($query_prodruit OR $query_campaigns OR $query_platform)
+             GROUP BY i.name, a.publication_date, at.name, k.label, a.text, p.name, cp.name,a.link";
+
+             // Autres requêtes similaires avec les mêmes conditions de date
+             $sql = "SELECT SUM(v.value) AS nombre_details, k.label AS nom_kpi
+             FROM vue_max_actions_details v
+             JOIN kpis k ON v.kpi_id = k.id
+             JOIN campaigns AS cp ON v.campaign_id = cp.id
+             JOIN platforms AS p ON v.platform_id = p.id
+             JOIN products AS pr ON v.product_id = pr.id
+             WHERE v.influenceur_id = $influencerId and k.companies_id=1 AND ($query_prodruit OR $query_campaigns OR $query_platform)
+             AND (v.publication_date BETWEEN '$date_debut' AND '$date_fin' OR v.date_j BETWEEN '$date_debut' AND '$date_fin')
+             GROUP BY v.influenceur_id, v.kpi_id";
+
+             // Pour le chat 1
+             $sql_chat_1 = "SELECT p.name AS platform, SUM(v.value) AS value
+             FROM vue_max_actions_details v
+             JOIN campaigns AS cp ON v.campaign_id = cp.id
+             JOIN platforms AS p ON v.platform_id = p.id
+             JOIN products AS pr ON v.product_id = pr.id
+             WHERE v.influenceur_id = $influencerId AND ($query_prodruit OR $query_campaigns OR $query_platform)
+             AND (v.publication_date BETWEEN '$date_debut' AND '$date_fin' OR v.date_j BETWEEN '$date_debut' AND '$date_fin')
+             GROUP BY p.name";
+
+             // Pour le chat 2
+             $sql_chat_2 = "SELECT cp.name AS campagne, SUM(v.value) AS value
+             FROM vue_max_actions_details v
+             JOIN campaigns AS cp ON v.campaign_id = cp.id
+             JOIN platforms AS p ON v.platform_id = p.id
+             JOIN products AS pr ON v.product_id = pr.id
+             WHERE v.influenceur_id = $influencerId AND ($query_prodruit OR $query_campaigns OR $query_platform)
+             AND (v.publication_date BETWEEN '$date_debut' AND '$date_fin' OR v.date_j BETWEEN '$date_debut' AND '$date_fin')
+             GROUP BY cp.name";
+
+             // Pour le chat 3
+             $sql_chat_3 = "SELECT pr.name AS produit, SUM(v.value) AS value
+             FROM vue_max_actions_details v
+             JOIN campaigns AS cp ON v.campaign_id = cp.id
+             JOIN platforms AS p ON v.platform_id = p.id
+             JOIN products AS pr ON v.product_id = pr.id
+             WHERE v.influenceur_id = $influencerId AND ($query_prodruit OR $query_campaigns OR $query_platform)
+             AND (v.publication_date BETWEEN '$date_debut' AND '$date_fin' OR v.date_j BETWEEN '$date_debut' AND '$date_fin')
+             GROUP BY pr.name";
+
+             // Pour le chat 4
+             $sql_chat_4 = "SELECT cp.name AS campagne, COUNT(*) AS kpi
+             FROM vue_max_actions_details v
+             JOIN campaigns AS cp ON v.campaign_id = cp.id
+             JOIN platforms AS p ON v.platform_id = p.id
+             JOIN products AS pr ON v.product_id = pr.id
+             WHERE influenceur_id = $influencerId AND ($query_prodruit OR $query_campaigns OR $query_platform) 
+             AND (v.publication_date BETWEEN '$date_debut' AND '$date_fin' OR v.date_j BETWEEN '$date_debut' AND '$date_fin')
+             GROUP BY v.campaign_id";
+
+             // Pour le chat 5
+             $sql_chat_5 = "SELECT p.name AS platform, COUNT(*) AS kpi
+             FROM vue_max_actions_details v
+             JOIN campaigns AS cp ON v.campaign_id = cp.id
+             JOIN platforms AS p ON v.platform_id = p.id
+             JOIN products AS pr ON v.product_id = pr.id
+             WHERE influenceur_id = $influencerId AND ($query_prodruit OR $query_campaigns OR $query_platform) 
+             AND (v.publication_date BETWEEN '$date_debut' AND '$date_fin' OR v.date_j BETWEEN '$date_debut' AND '$date_fin')
+             GROUP BY v.platform_id";
+
+             // Pour le chat 6
+             $sql_chat_6 = "SELECT pr.name AS produit, COUNT(*) AS kpi
+             FROM vue_max_actions_details v
+             JOIN campaigns AS cp ON v.campaign_id = cp.id
+             JOIN platforms AS p ON v.platform_id = p.id
+             JOIN products AS pr ON v.product_id = pr.id
+             WHERE v.influenceur_id = $influencerId AND ($query_prodruit OR $query_campaigns OR $query_platform) 
+             AND (v.publication_date BETWEEN '$date_debut' AND '$date_fin' OR v.date_j BETWEEN '$date_debut' AND '$date_fin')
+             GROUP BY pr.name";
+
+                $query_action="SELECT
+                SUM(v.value) AS val,
+                k.`name` AS nom_actions
+                FROM
+                vue_max_actions_details v
+                JOIN actions_types k ON
+                v.reaction_type_id = k.id
+                JOIN campaigns AS cp
+                ON
+                v.campaign_id = cp.id
+                JOIN platforms AS p
+                ON
+                v.platform_id = p.id
+                JOIN products AS pr
+                ON
+                v.product_id = pr.id
+                WHERE v.influenceur_id = $influencerId AND ($query_prodruit OR $query_campaigns OR $query_platform) 
+                AND (v.publication_date BETWEEN '$date_debut' AND '$date_fin' OR v.date_j BETWEEN '$date_debut' AND '$date_fin')
+                GROUP BY
+                v.influenceur_id,
+                v.reaction_type_id;";
+           
+        }
+
+
             // Exécutez la requête et obtenez les résultats
                 $results_chat_1 = $bd->executeCustomQuery($sql_chat_1);
                 $result = $bd->executeCustomQuery($sql);
@@ -417,7 +694,8 @@ function separateurMilliers($nombre) {
                 $influencer =$bd->executeCustomQuery($query);
                 $table=$bd->executeCustomQuery($query_table);
                 $total_engagement=$bd->executeCustomQuery($query_engagement);
-                $nbr_abonner=$bd->executeCustomQuery($query_nbr_abonner)[0]??null;
+                $nbr_abonner=$bd->executeCustomQuery($query_nbr_abonner)[0]??null; //$query_action
+                $action_engagement=$bd->executeCustomQuery($query_action);
                   $objectif_influenceur=$bd->executeCustomQuery($query_objectif_influenceur)[0]??null;
                // var_dump($nbr_abonner);
                 // Maintenant vous pouvez utiliser $influencerId pour effectuer des opérations basées sur l'ID, par exemple interroger la base de données ou afficher des détails spécifiques à l'influenceur avec cet ID
@@ -426,9 +704,45 @@ function separateurMilliers($nombre) {
 
 
 
-       
+                
 
         
+                
+                $kipsData = array();
+
+                // Parcourez les résultats et remplissez le tableau engagementData , k.label AS 
+                foreach ($result as $row) {
+                    $platform = $row['nom_kpi'];
+                    $value = $row['nombre_details'];
+                    
+                    // Remplissez le tableau avec les données d'engagement
+                    $kipsData[] = array(
+                        "kpi" => $platform,
+                        "value" => $value
+                    );
+                }
+             
+                $kipsDataJSON = json_encode($kipsData);
+
+
+
+
+                $actionsData = array();
+
+        // Parcourez les résultats et remplissez le tableau engagementData
+        foreach ($action_engagement as $row) {
+            $platform = $row['nom_actions'];
+            $value = $row['val'];
+            
+            // Remplissez le tableau avec les données d'engagement
+            $actionsData[] = array(
+                "engagement" => $platform,
+                "value" => $value
+            );
+        }
+     
+        $actionsDataJSON = json_encode($actionsData);
+
 
         // Initialisez un tableau pour stocker les données d'engagement
         $engagementData = array();
@@ -446,7 +760,7 @@ function separateurMilliers($nombre) {
         }
      
         $engagementDataJSON = json_encode($engagementData);
-
+        
 
 
         
@@ -603,7 +917,12 @@ function separateurMilliers($nombre) {
             array_push($matrix[$kpi], $nombreDetails);
         }
         // print_r(json_encode($matrix));
-              ?>
+
+
+
+             
+             
+             ?>
 
 <div class="sidebar">
     <ul>
@@ -625,9 +944,106 @@ function separateurMilliers($nombre) {
 
         <div style="text-align: left" class="custom-header">
             <a href="index.php" class="back-link">⇦ Liste des Influenceurs</a>
+
+            <fieldset>
+                      <legend>Filtre</legend>
+                      <form class="filter-form" action="" method="post">
+                          <div class="form-group">
+                                <label for="campaigns">Campaigns</label>
+                                <select name="campaigns" >
+                                <option value="" >Tout </option> 
+                                <?php
+                                  $query_campaigns = "SELECT * FROM campaigns WHERE name!='Default Campagn' AND company_id=1";
+                                  $campaigns =$bd->executeCustomQuery($query_campaigns);
+                                    if (count($campaigns) > 0) 
+                                    {
+                                        foreach ($campaigns as $key => $row) {
+                                          $campaignId = $row["id"];
+                                            $campaignName = $row["name"];
+                                            echo "<option value='$campaignId'>$campaignName</option>";
+                                        }
+                                    } 
+                                    else 
+                                    {
+                                        echo "<option>Aucune campagne disponible.</option>";
+                                    }
+                                ?> 
+                                </select>
+                          </div>
+                          <div class="form-group">
+                            <label for="platform">Platform</label>
+                            <select name="platform" >
+                            <option value="" >Tout </option>
+                                <?php
+
+                              $query_platforms = "SELECT * FROM platforms ";
+                              $platforms = $bd->executeCustomQuery($query_platforms);
+
+                              if (count($platforms) > 0) {
+                                  foreach ($platforms as $key => $row) {
+                                      $platformId = $row["id"];
+                                      $platformName = $row["name"];
+                                      echo "<option value='$platformId'>$platformName</option>";
+                                  }
+                              } else {
+                                  echo "<option>Aucune plateforme disponible.</option>";
+                              }
+                                ?> 
+                            </select>
+                          </div>
+                          <div class="form-group">
+                              <label for="prodruit">Prodruit</label>
+                              <select name="prodruit">
+                              <option value="" >Tout </option>
+                              <?php
+                                $query_products = "SELECT * FROM products WHERE company_id=1";
+                                $products = $bd->executeCustomQuery($query_products);
+
+                                if (count($products) > 0) {
+                                    foreach ($products as $key => $row) {
+                                        $productId = $row["id"];
+                                        $productName = $row["name"];
+                                        echo "<option value='$productId'>$productName</option>";
+                                    }
+                                } else {
+                                    echo "<option>Aucun produit disponible.</option>";
+                                }
+                              ?>
+                              </select>
+                          </div>
+                          <div class="form-group">
+                              <label for="date">Date</label>
+                              <input type="date" id="date" name="date" min="2023-01-01" value="" style="text-align: center;">
+                          </div>
+                          <div class="form-group">
+                              <br>
+                              <button type="submit" name="goFilter" class="apply-button" style="width: 80%;">
+                                Appliquer
+                              </button>
+                              <button class="export" type="submit">Exporter</button>
+                          </div>
+                      </form>
+                     
+                
+            </fieldset>
+                <br>
+                    <form class="mb-4" method="POST" action="">
+                        <label for="dateDebut">Date de début : </label>
+                        <input type="date" id="dateDebut" name="dateDebut" min="2023-01-01" value="2023-01-01">
+                        
+                        <label for="dateFin">Date de fin : </label>
+                        <input type="date" id="dateFin" name="dateFin" min="2023-01-01" value="<?php echo date('Y-m-d'); ?>">
+                        <br><br>
+                        <button type="submit" name="dateFilter" class="btn btn-primary">Filtrer</button>
+                    </form>
         </div>
 
 
+<?php
+
+$ObjectifData = array();
+
+?>
 
         <?php echo ($date_debut!=null && $date_fin!=null)?" de <strong style='color:blue'> $date_debut </strong > à <strong style='color:blue'> $date_fin</strong>":""; ?>
                 <form action="export.php?id=<?=$influencerId?>&dateDebut=<?=$date_debut?>&dateFin=<?=$date_fin?>" method="post">
@@ -641,16 +1057,7 @@ function separateurMilliers($nombre) {
                     <h3><?php echo $influencer[0]['full_name']; ?></h3>
 
                     <br>
-                    <br>
-                    <form class="mb-4" method="POST" action="">
-                        <label for="dateDebut">Date de début : </label>
-                        <input type="date" id="dateDebut" name="dateDebut" min="2023-01-01" value="2023-01-01">
-                        
-                        <label for="dateFin">Date de fin : </label>
-                        <input type="date" id="dateFin" name="dateFin" min="2023-01-01" value="<?php echo date('Y-m-d'); ?>">
-                        
-                        <button type="submit" class="btn btn-primary">Filtrer</button>
-                    </form>
+                  
 
 
 
@@ -668,6 +1075,13 @@ function separateurMilliers($nombre) {
                                                 <p>Objectifs :<samp style="font-size: 20px;font-weight: bold;"> <?=separateurMilliers($objectif_influenceur['Video']??null)??"Indisponible"?>  </samp></p>
                                                 <p>Réalisations :<samp style="font-size: 20px;font-weight: bold;"> / </samp></p>
                                             </div>
+                                            <?php
+
+                                                    $ObjectifData[] = array(
+                                                        "Objectif" => 'Video',
+                                                        "value" => $objectif_influenceur['Video']??0
+                                                    );
+                                             ?>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -680,6 +1094,13 @@ function separateurMilliers($nombre) {
                                                 <p>Objectifs :<samp style="font-size: 20px;font-weight: bold;"> <?=separateurMilliers($objectif_influenceur['Post']??0)??"Indisponible"?>  </samp></p>
                                                 <p>Réalisations :<samp style="font-size: 20px;font-weight: bold;"> / </samp></p>
                                             </div>
+                                            <?php
+
+                                            $ObjectifData[] = array(
+                                                "Objectif" => 'Post',
+                                                "value" => $objectif_influenceur['Post']??0
+                                            );
+                                            ?>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -692,6 +1113,14 @@ function separateurMilliers($nombre) {
                                                 <p>Objectifs :<samp style="font-size: 20px;font-weight: bold;"> <?=separateurMilliers($objectif_influenceur['Comment']??0)??"Indisponible"?>  </samp></p>
                                                 <p>Réalisations :<samp style="font-size: 20px;font-weight: bold;"> / </samp></p>
                                             </div>
+
+                                            <?php
+
+                                            $ObjectifData[] = array(
+                                                "Objectif" => 'Comment',
+                                                "value" => $objectif_influenceur['Comment']??0
+                                            );
+                                            ?>
                                 </div>
                             </div>
                             
@@ -705,6 +1134,14 @@ function separateurMilliers($nombre) {
                                                 <p>Objectifs :<samp style="font-size: 20px;font-weight: bold;"> <?=separateurMilliers($objectif_influenceur['Ayoba']??0)??"Indisponible"?>  </samp></p>
                                                 <p>Réalisations :<samp style="font-size: 20px;font-weight: bold;"> / </samp></p>
                                             </div>
+ 
+                                            <?php
+
+                                            $ObjectifData[] = array(
+                                                "Objectif" => 'Ayoba',
+                                                "value" => $objectif_influenceur['Ayoba']??0
+                                            );
+                                            ?>                                           
                                 </div>
                             </div>
 
@@ -718,6 +1155,13 @@ function separateurMilliers($nombre) {
                                                 <p>Objectifs :<samp style="font-size: 20px;font-weight: bold;"> <?=separateurMilliers($objectif_influenceur['Engagement']??0)??"Indisponible"?>  </samp></p>
                                                 <p>Réalisations :<samp style="font-size: 20px;font-weight: bold;"> / </samp></p>
                                             </div>
+                                              <?php
+
+                                                $ObjectifData[] = array(
+                                                    "Objectif" => 'Engagement',
+                                                    "value" => $objectif_influenceur['Engagement']??0
+                                                );
+                                                ?> 
                                 </div>
                             </div>  
                             
@@ -731,6 +1175,13 @@ function separateurMilliers($nombre) {
                                                 <p>Objectifs :<samp style="font-size: 20px;font-weight: bold;"> <?=separateurMilliers($objectif_influenceur['Figuration360']??0)??"Indisponible"?>  </samp></p>
                                                 <p>Réalisations :<samp style="font-size: 20px;font-weight: bold;"> / </samp></p>
                                             </div>
+                                            <?php
+
+                                                    $ObjectifData[] = array(
+                                                        "Objectif" => 'Figuration 360',
+                                                        "value" => $objectif_influenceur['Figuration360']??0
+                                                    );
+                                                    ?>                                            
                                 </div>
                             </div> 
 
@@ -744,6 +1195,13 @@ function separateurMilliers($nombre) {
                                                 <p>Objectifs :<samp style="font-size: 20px;font-weight: bold;"> <?=separateurMilliers($objectif_influenceur['Activation_Terrain']??0)??"Indisponible"?>  </samp></p>
                                                 <p>Réalisations :<samp style="font-size: 20px;font-weight: bold;"> / </samp></p>
                                             </div>
+                                            <?php
+
+$ObjectifData[] = array(
+    "Objectif" => 'Activation Terrain',
+    "value" => $objectif_influenceur['Activation_Terrain']??0
+);
+?>   
                                 </div>
                             </div> 
 
@@ -757,6 +1215,13 @@ function separateurMilliers($nombre) {
                                                 <p>Objectifs :<samp style="font-size: 20px;font-weight: bold;"> <?=separateurMilliers($objectif_influenceur['Apparitions_Evenement']??0)??"Indisponible"?>  </samp></p>
                                                 <p>Réalisations :<samp style="font-size: 20px;font-weight: bold;"> / </samp></p>
                                             </div>
+                                            <?php
+
+                                            $ObjectifData[] = array(
+                                                "Objectif" => 'Apparitions Evenement',
+                                                "value" => $objectif_influenceur['Apparitions_Evenement']??0
+                                            );
+                                            ?>                                            
                                 </div>
                             </div> 
 
@@ -770,6 +1235,13 @@ function separateurMilliers($nombre) {
                                                 <p>Objectifs :<samp style="font-size: 20px;font-weight: bold;"> <?=separateurMilliers($objectif_influenceur['Stories']??0)??"Indisponible"?>  </samp></p>
                                                 <p>Réalisations :<samp style="font-size: 20px;font-weight: bold;"> / </samp></p>
                                             </div>
+                                            <?php
+
+                                            $ObjectifData[] = array(
+                                                "Objectif" => 'Stories',
+                                                "value" => $objectif_influenceur['Stories']??0
+                                            );
+                                            ?>
                                 </div>
                             </div> 
 
@@ -783,6 +1255,13 @@ function separateurMilliers($nombre) {
                                                 <p>Objectifs :<samp style="font-size: 20px;font-weight: bold;"> <?=separateurMilliers($objectif_influenceur['Live']??0)??"Indisponible"?>  </samp></p>
                                                 <p>Réalisations :<samp style="font-size: 20px;font-weight: bold;"> / </samp></p>
                                             </div>
+                                            <?php
+
+                                            $ObjectifData[] = array(
+                                                "Objectif" => 'Live',
+                                                "value" => $objectif_influenceur['Live']??0
+                                            );
+                                            ?>
                                 </div>
                             </div> 
 
@@ -796,6 +1275,13 @@ function separateurMilliers($nombre) {
                                                 <p>Objectifs :<samp style="font-size: 20px;font-weight: bold;"> <?=separateurMilliers($objectif_influenceur['tag']??0)??"Indisponible"?>  </samp></p>
                                                 <p>Réalisations :<samp style="font-size: 20px;font-weight: bold;"> / </samp></p>
                                             </div>
+                                            <?php
+
+$ObjectifData[] = array(
+    "Objectif" => 'tag',
+    "value" => $objectif_influenceur['tag']??0
+);
+?>
                                 </div>
                             </div> 
                        </div>
@@ -876,116 +1362,116 @@ function separateurMilliers($nombre) {
        
                 
             
-        <div style="margin-top: 5%" class="row">
+            <div style="margin-top: 5%" class="row">
 
-            <div class="col-md-3">
-                <div class="card">
-                    <div class="picture">
-                        <img src="images/kpi.png" alt="Profile Image">
-                    </div>
-
-                    <div class="info">
-                    <p>
-                        <samp style="font-size: 40px;font-weight: bold;">  <?= separateurMilliers($kpis[0]["kpi"]??0)?></samp>
-                        </p>
-                        <h4>Total Activations</h4>
-                       
-                    </div>
-                </div>
-            </div>
-
-
-
-            <div class="col-md-3">
-                <div class="card">
-                    <div class="picture">
-                        <img src="images/vue.png" alt="Profile Image">
-                    </div>
-                    <div class="info">
-                    <p>
-                        <samp style="font-size: 40px;font-weight: bold;">  <?= separateurMilliers($matrix["Nombre de vues "][0]??0)?></samp>
-                        </p>
-                        <h4>Total Vues</h4>
-                       
-                    </div>
-
-                </div>
-            </div>
-
-
-
-            <div class="col-md-3">
-                <div class="card">
-                    <div class="picture">
-                        <img src="images/share.png" alt="Profile Image">
-                    </div>
-    
-                    <div class="info">
-                       <p>
-                        <samp style="font-size: 40px;font-weight: bold;">  <?= separateurMilliers($matrix["Nombre des partages "][0]??0)?></samp>
-                        </p>
-                        <h4>Total Partages</h4>
-                       
-                    </div>
-                </div>
-            </div>
-
-
-            <div class="col-md-3">
-                <div class="card">
-                    <div class="picture">
-                        <img src="images/like.png" alt="Profile Image">
-                    </div>
-                    <div class="info">
-                       <p>
-                        <samp style="font-size: 40px;font-weight: bold;">  <?= separateurMilliers($matrix["Nombre de likes "][0]??0)?></samp>
-                        </p>
-                        <h4>Total Likes</h4>
-                    </div>
-                </div>
-            </div>
-
-
-            <div class="col-md-3">
-                <div class="card">
-                    <div class="picture">
-                        <img src="images/comment.png" alt="Profile Image">
-                    </div>
-                
-                    <div class="info">
-                    <p>
-                        <samp style="font-size: 40px;font-weight: bold;">  <?=separateurMilliers( $matrix["Nombre de commentaires "][0]??0)?></samp>
-                        </p>
-                        <h4>Total Commentaires</h4>
-                    </div>
-                </div>
-            </div>
-
-
-            <?php
-                    $Total__engagement=
- $matrix["Nombre de commentaires "][0]+
- $matrix["Nombre de vues "][0]+
- $matrix["Nombre des partages "][0] + $matrix["Nombre de likes "][0]
-                    ?>
-
-            <div class="col-md-3">
-                <div class="card">
-                    <div class="picture">
-                        <img src="images/group.png" alt="Profile Image">
-                    </div>
-           
-                    <div class="info">
-                        <p>
-                        <samp style="font-size: 40px;font-weight: bold;">  <?= separateurMilliers( $Total__engagement??$total_engagement[0]['value'])?></samp>
-                        </p>
-                        <h4>Total Engagements </h4>
-                       
-                    </div>
-                    
-                </div>
-            </div>
+<div class="col-md-3">
+    <div class="card">
+        <div class="picture">
+            <img src="images/kpi.png" alt="Profile Image">
         </div>
+
+        <div class="info">
+        <p>
+            <samp style="font-size: 40px;font-weight: bold;">  <?= separateurMilliers($kpis?($kpis[0]?$kpis[0]["kpi"]:0):0)?></samp>
+            </p>
+            <h4>Total Activations</h4>
+           
+        </div>
+    </div>
+</div>
+
+
+
+<div class="col-md-3">
+    <div class="card">
+        <div class="picture">
+            <img src="images/vue.png" alt="Profile Image">
+        </div>
+        <div class="info">
+        <p>
+            <samp style="font-size: 40px;font-weight: bold;">  <?= separateurMilliers($matrix?(isset($matrix["Nombre de vues "])?$matrix["Nombre de vues "][0]:0):0)?></samp>
+            </p>
+            <h4>Total Vues</h4>
+           
+        </div>
+
+    </div>
+</div>
+
+
+
+<div class="col-md-3">
+    <div class="card">
+        <div class="picture">
+            <img src="images/share.png" alt="Profile Image">
+        </div>
+
+        <div class="info">
+           <p>
+            <samp style="font-size: 40px;font-weight: bold;">  <?= separateurMilliers($matrix?(isset($matrix["Nombre des partages "])?$matrix["Nombre des partages "][0]:0):0)?></samp>
+            </p>
+            <h4>Total Partages</h4>
+           
+        </div>
+    </div>
+</div>
+
+
+<div class="col-md-3">
+    <div class="card">
+        <div class="picture">
+            <img src="images/like.png" alt="Profile Image">
+        </div>
+        <div class="info">
+           <p>
+            <samp style="font-size: 40px;font-weight: bold;">  <?= separateurMilliers($matrix?( isset($matrix["Nombre de likes "])?$matrix["Nombre de likes "][0]:0):0)?></samp>
+            </p>
+            <h4>Total Likes</h4>
+        </div>
+    </div>
+</div>
+
+
+<div class="col-md-3">
+    <div class="card">
+        <div class="picture">
+            <img src="images/comment.png" alt="Profile Image">
+        </div>
+    
+        <div class="info">
+        <p>
+            <samp style="font-size: 40px;font-weight: bold;">  <?=separateurMilliers($matrix? (isset($matrix["Nombre de commentaires "])?$matrix["Nombre de commentaires "][0]:0):0)?></samp>
+            </p>
+            <h4>Total Commentaires</h4>
+        </div>
+    </div>
+</div>
+
+
+<?php
+        $Total__engagement=
+($matrix? (isset($matrix["Nombre de commentaires "])?$matrix["Nombre de commentaires "][0]:0):0)+
+($matrix?(isset($matrix["Nombre de vues "])?$matrix["Nombre de vues "][0]:0):0)+
+($matrix?(isset($matrix["Nombre des partages "])?$matrix["Nombre des partages "][0]:0):0) + ($matrix?( isset($matrix["Nombre de likes "])?$matrix["Nombre de likes "][0]:0):0)
+        ?>
+
+<div class="col-md-3">
+    <div class="card">
+        <div class="picture">
+            <img src="images/group.png" alt="Profile Image">
+        </div>
+
+        <div class="info">
+            <p>
+            <samp style="font-size: 40px;font-weight: bold;">  <?= separateurMilliers( $Total__engagement??$total_engagement[0]['value'])?></samp>
+            </p>
+            <h4>Total Engagements </h4>
+           
+        </div>
+        
+    </div>
+</div>
+</div>
     </div>
 
 
@@ -1034,6 +1520,22 @@ function separateurMilliers($nombre) {
     </div>
 
 
+    <div class="container">
+        <h2 style="margin: 5%;color: #007bff;font-weight: bold;">Engagement par KPI et Type D'action</h2>
+        <div class="card"> 
+            <div class="col-md-9">
+                <canvas id="actionsChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+<br>
+
+        <div class="card"> 
+            <div class="col-md-9">
+                <canvas id="kipsChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+<br><br>
+    </div>
 
     <div class="container">
      <!-- <canvas id="chartEngagement" width="400" height="200"></canvas> -->
@@ -1096,7 +1598,90 @@ function separateurMilliers($nombre) {
 document.addEventListener("DOMContentLoaded", function() 
 
 {
+
+ // Récupérez l'élément canvas
+ var canvas = document.getElementById("kipsChart");
+
+// Parsez les données JSON récupérées du PHP
+var kipsData = <?php echo $kipsDataJSON; ?>;
+console.log(kipsData)
+// Créez des tableaux pour les labels de plateforme et les valeurs d'engagement
+var labels = kipsData.map(function(item) {
+    return item.kpi;
+});
+
+var values = kipsData.map(function(item) {
+    return item.value;
+});
+
+// Créez le diagramme en utilisant Chart.js
+var ctx = canvas.getContext("2d");
+new Chart(ctx, {
+    type: "bar",
+    data: {
+        labels: labels,
+        datasets: [{
+            label: "Engagement par KPI",
+            data: values,
+            backgroundColor: "rgba(250, 186, 7, 0.8)",
+            borderColor: "rgba(75, 192, 192, 1)",
+            borderWidth: 1
+        }]
+    },
+    options: {
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+
+
+
+
     // Récupérez l'élément canvas
+    var canvas = document.getElementById("actionsChart");
+
+    // Parsez les données JSON récupérées du PHP
+    var actionsData = <?php echo $actionsDataJSON; ?>;
+    console.log(actionsData)
+    // Créez des tableaux pour les labels de plateforme et les valeurs d'engagement
+    var labels = actionsData.map(function(item) {
+        return item.engagement;
+    });
+
+    var values = actionsData.map(function(item) {
+        return item.value;
+    });
+
+    // Créez le diagramme en utilisant Chart.js
+    var ctx = canvas.getContext("2d");
+    new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Engagement par type d'action",
+                data: values,
+                backgroundColor: "rgba(27, 16, 21, 0.8)",
+                borderColor: "rgba(75, 192, 192, 1)",
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+
+
+
     var canvas = document.getElementById("engagementChart");
 
     // Parsez les données JSON récupérées du PHP
@@ -1133,6 +1718,7 @@ console.log(engagementData)
             }
         }
     });
+
 
         // Les données d'engagement par campagne
         var campaignEngagementData = <?php echo $campaignEngagementData; ?>;

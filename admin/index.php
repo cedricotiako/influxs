@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    
+    <link rel="stylesheet" href="style.css">
   <style>
         /* Style pour le formulaire */
         form {
@@ -86,6 +86,19 @@
 </head>
 <body>
 
+
+<div class="sidebar">
+    <ul>
+      <li><a href="abonneEdit.php">Formulaire d'edition du nombre d'abonne</a></li>
+      <li><a href="index.php">Formulaire d'edition des objectif des influenseur</a></li>
+      <!-- <li><a href="#">Servicios</a></li>
+      <li><a href="#">Contacto</a></li> -->
+    </ul>
+  </div>
+  <div class="content">
+    <h1>Edit Form</h1>
+    
+  
  <!-- Modal popup -->
  <div id="myModal" class="modal">
     <div class="modal-content">
@@ -228,7 +241,7 @@ if(isset($_POST['submit'])) {
    <button type="submit" name="submit">Enregistrer</button> 
   </div>
 </form>
-
+</div>
 
 <script>
     // Afficher le modal popup

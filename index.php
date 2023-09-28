@@ -331,6 +331,7 @@ select:focus {
         JOIN actions_types AS at ON a.reaction_type_id = at.id
         JOIN contracts AS c ON a.contract_id = c.id
         JOIN influencers AS i ON c.influenceur_id = i.id
+        
         JOIN platforms AS p ON a.platform_id = p.id
         JOIN products AS pr ON a.product_id = pr.id
         WHERE a.publication_date >= '$date' AND i.company_id =1   

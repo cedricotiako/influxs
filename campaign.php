@@ -157,7 +157,7 @@ p {
                       <button type="button" style="background-color: transparent; border: none; outline: none; cursor: pointer; padding: 6px; border-radius: 50%;">
                           <i class="fas fa-search" style="color: #666; font-size: 16px;"></i>
                       </button>
-                  </form>
+  </form>
     <?php
     // Connexion à la base de données
                  

@@ -627,6 +627,85 @@ function separateurMilliers($nombre) {
             <a href="index.php" class="back-link">⇦ Liste des Influenceurs</a>
         </div>
 
+        <fieldset>
+                      <legend>Filtre</legend>
+                      <form class="filter-form" action="" method="post">
+                          <div class="form-group">
+                                <label for="campaigns">Campaigns</label>
+                                <select name="campaigns" >
+                                <option value="" >Tout </option> 
+                                <?php
+                                  $query_campaigns = "SELECT * FROM campaigns WHERE name!='Default Campagn' AND company_id=1";
+                                  $campaigns =$bd->executeCustomQuery($query_campaigns);
+                                    if (count($campaigns) > 0) 
+                                    {
+                                        foreach ($campaigns as $key => $row) {
+                                          $campaignId = $row["id"];
+                                            $campaignName = $row["name"];
+                                            echo "<option value='$campaignId'>$campaignName</option>";
+                                        }
+                                    } 
+                                    else 
+                                    {
+                                        echo "<option>Aucune campagne disponible.</option>";
+                                    }
+                                ?> 
+                                </select>
+                          </div>
+                          <div class="form-group">
+                            <label for="platform">Platform</label>
+                            <select name="platform" >
+                            <option value="" >Tout </option>
+                                <?php
+
+                              $query_platforms = "SELECT * FROM platforms ";
+                              $platforms = $bd->executeCustomQuery($query_platforms);
+
+                              if (count($platforms) > 0) {
+                                  foreach ($platforms as $key => $row) {
+                                      $platformId = $row["id"];
+                                      $platformName = $row["name"];
+                                      echo "<option value='$platformId'>$platformName</option>";
+                                  }
+                              } else {
+                                  echo "<option>Aucune plateforme disponible.</option>";
+                              }
+                                ?> 
+                            </select>
+                          </div>
+                          <div class="form-group">
+                              <label for="prodruit">Prodruit</label>
+                              <select name="prodruit">
+                              <option value="" >Tout </option>
+                              <?php
+                                $query_products = "SELECT * FROM products WHERE company_id=1";
+                                $products = $bd->executeCustomQuery($query_products);
+
+                                if (count($products) > 0) {
+                                    foreach ($products as $key => $row) {
+                                        $productId = $row["id"];
+                                        $productName = $row["name"];
+                                        echo "<option value='$productId'>$productName</option>";
+                                    }
+                                } else {
+                                    echo "<option>Aucun produit disponible.</option>";
+                                }
+                              ?>
+                              </select>
+                          </div>
+                          <div class="form-group">
+                              <label for="date">Date</label>
+                              <input type="date" id="date" name="date" min="2023-01-01" value="" style="text-align: center;">
+                          </div>
+                          <div class="form-group">
+                              <br>
+                              <button type="submit" name="goFilter" class="apply-button" style="width: 80%;">
+                                Appliquer
+                              </button>
+                              <button class="export" type="submit">Exporter</button>
+                          </div>
+                      </form>
+        </fieldset>
 
 
         <?php echo ($date_debut!=null && $date_fin!=null)?" de <strong style='color:blue'> $date_debut </strong > à <strong style='color:blue'> $date_fin</strong>":""; ?>

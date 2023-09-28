@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <style>
         /* Style pour le formulaire */
@@ -86,7 +87,18 @@
   </style>
 </head>
 <body>
-
+<div class="sidebar">
+    <ul>
+      <li><a href="abonneEdit.php">Formulaire d'edition du nombre d'abonne</a></li>
+      <li><a href="index.php">Formulaire d'edition des objectif des influenseur</a></li>
+      <!-- <li><a href="#">Servicios</a></li>
+      <li><a href="#">Contacto</a></li> -->
+    </ul>
+  </div>
+  <div class="content">
+    <h1>Edit Form</h1>
+    
+  
  <!-- Modal popup -->
  <div id="myModal" class="modal">
     <div class="modal-content">
@@ -207,7 +219,7 @@
   </div>
     </form>
   </div>
-
+</div>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
 <script>
