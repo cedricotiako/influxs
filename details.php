@@ -319,6 +319,35 @@ select:focus {
   transition: border-color 0.3s ease; */
 }
 
+
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.legend .elt {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.legend .elt .color-box {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+}
+ .value-box {
+  background-color: rgba(200, 186, 75, 0.8);
+  /* #007bff;  */
+  color: white;
+  /* rgba(200, 186, 75, 0.8) */
+  text-align: center;
+
+ 
+  font-weight: bold;
+}
     </style>
 </head>
 <body>
@@ -533,7 +562,28 @@ function separateurMilliers($nombre) {
                v.influenceur_id,
                v.reaction_type_id;";
 
-               
+          $query_nb_action="SELECT
+          k.`name` AS nom_actions,
+          COALESCE(COUNT(*), 0) AS valeur
+      FROM
+          vue_max_actions_details v
+      JOIN campaigns AS cp
+      ON
+          v.campaign_id = cp.id
+      JOIN platforms AS p
+      ON
+          v.platform_id = p.id
+      JOIN products AS pr
+      ON
+          v.product_id = pr.id
+      JOIN actions_types k ON
+          v.reaction_type_id = k.id
+          WHERE v.influenceur_id = $influencerId 
+              AND (v.publication_date BETWEEN '$date_debut' AND '$date_fin' OR v.date_j BETWEEN '$date_debut' AND '$date_fin')
+      GROUP BY
+          v.reaction_type_id;";
+
+            
         if(isset($_POST['goFilter'])) 
         {
     
@@ -696,14 +746,31 @@ function separateurMilliers($nombre) {
                 $total_engagement=$bd->executeCustomQuery($query_engagement);
                 $nbr_abonner=$bd->executeCustomQuery($query_nbr_abonner)[0]??null; //$query_action
                 $action_engagement=$bd->executeCustomQuery($query_action);
+                $nb_action_kpi=$bd->executeCustomQuery($query_nb_action);
                   $objectif_influenceur=$bd->executeCustomQuery($query_objectif_influenceur)[0]??null;
                // var_dump($nbr_abonner);
                 // Maintenant vous pouvez utiliser $influencerId pour effectuer des opérations basées sur l'ID, par exemple interroger la base de données ou afficher des détails spécifiques à l'influenceur avec cet ID
               
-               
+                
 
 
 
+
+                $nb_action_kpiData = array();
+
+                // Parcourez les résultats et remplissez le tableau engagementData , k.label AS 
+                foreach ($nb_action_kpi as $row) {
+                    $platform = $row['nom_actions'];
+                    $value = $row['valeur'];
+                    
+                    // Remplissez le tableau avec les données d'engagement
+                    $nb_action_kpiData[] = array(
+                        "kpi" => $platform,
+                        "value" => $value
+                    );
+                }
+             
+                $nb_action_kpiDataJSON = json_encode($nb_action_kpiData);
                 
 
         
@@ -1522,61 +1589,347 @@ $ObjectifData[] = array(
 
     <div class="container">
         <h2 style="margin: 5%;color: #007bff;font-weight: bold;">Engagement par KPI et Type D'action</h2>
-        <div class="card"> 
-            <div class="col-md-9">
-                <canvas id="actionsChart" width="400" height="200"></canvas>
-            </div>
-        </div>
-<br>
 
         <div class="card"> 
-            <div class="col-md-9">
-                <canvas id="kipsChart" width="400" height="200"></canvas>
+          <div class="row col-md-12">
+                <div class="col-md">
+                    <canvas id="actionsChart" width="400" height="200"></canvas>
+                </div>
+                <div class="col-md-3">
+                    <div class="legend">
+                    <table>
+                        <th>Actions</th>
+                        <th>KPI</th>
+                        <?php 
+                        
+                        foreach ($action_engagement as $key => $value) {
+                            ?>
+                            <div class="elt" style="margin-bottom: 5px;">
+                            <tr> 
+                                <td>
+                                <span><?=$value['nom_actions']?></span>
+                            </td>
+                            <td class="value-box" style="background-color: rgba(27, 16, 21, 0.8);">
+                            <span ><?=$value['val']?></span>
+                            </td>
+                            </tr>
+                                
+                            
+                            </div>
+                            <?php
+                        }
+                        ?>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+       <br>
+
+
+
+
+        <div class="card"> 
+          <div class="row col-md-12">
+                <div class="col-md">
+                    <canvas id="kipsChart" width="400" height="200"></canvas>
+                </div>
+                <div class="col-md-3">
+                    <div class="legend">
+                    <table>
+                        <th>Actions</th>
+                        <th>KPI</th>
+                        <?php 
+                        
+                        foreach ($result as $key => $value) {
+                            ?>
+                            <div class="elt" style="margin-bottom: 5px;">
+                            <tr> 
+                                <td>
+                                <span><?=$value['nom_kpi']?></span>
+                            </td>
+                            <td class="value-box" style="background-color: rgba(250, 186, 7, 0.8);">
+                            <span ><?=$value['nombre_details']?></span>
+                            </td>
+                            </tr>
+                                
+                            
+                            </div>
+                            <?php
+                        }
+                        ?>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
 <br><br>
     </div>
 
+ 
     <div class="container">
-     <!-- <canvas id="chartEngagement" width="400" height="200"></canvas> -->
+  <h2 style="margin: 5%; color: #007bff; font-weight: bold;">Nombre d'action par KPI et Type D'action</h2>
+
+
+
+
+
+<div class="card"> 
+    <div class="row col-md-12">
+        <div class="col-md">
+            <canvas id="actionkipsChart" width="400" height="200"></canvas>
+        </div>
+        <div class="col-md-3">
+            <div class="legend">
+            <table>
+                <th>Actions</th>
+                <th>KPI</th>
+                <?php 
+                
+                foreach ($nb_action_kpi as $key => $value) {
+                    ?>
+                    <div class="elt" style="margin-bottom: 5px;">
+                       <tr> 
+                        <td>
+                        <span><?=$value['nom_actions']?></span>
+                       </td>
+                    <td class="value-box">
+                      <span ><?=$value['valeur']?></span>
+                    </td>
+                    </tr>
+                        
+                       
+                    </div>
+                    <?php
+                }
+                ?>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+   </div>
+
+    <div class="container">
+
         <div class="card"> 
-            <div class="col-md-9">
-                <canvas id="engagementChart" width="400" height="200"></canvas>
+          <div class="row col-md-12">
+                <div class="col-md">
+                    <canvas id="engagementChart" width="400" height="200"></canvas>
+                </div>
+                <div class="col-md-3">
+                    <div class="legend">
+                    <table>
+                        <th>Platform</th>
+                        <th>Engagement</th>
+                        <?php 
+                        
+                        foreach ($results_chat_1 as $key => $value) {
+                            ?>
+                            <div class="elt" style="margin-bottom: 5px;">
+                            <tr> 
+                                <td>
+                                <span><?=$value['platform']?></span>
+                            </td>
+                            <td class="value-box" style="background-color: rgba(75, 192, 192, 0.2);color: black">
+                            <span ><?=$value['value']?></span>
+                            </td>
+                            </tr>
+                                
+                            
+                            </div>
+                            <?php
+                        }
+                        ?>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
+
 
 
         <div class="card"> 
-            <div class="col-md-9">
-                <canvas id="campaignEngagementChart" width="400" height="200"></canvas>
+          <div class="row col-md-12">
+                <div class="col-md">
+                    <canvas id="campaignEngagementChart" width="400" height="200"></canvas>
+                </div>
+                <div class="col-md-5">
+                    <div class="legend">
+                    <table>
+                        <th>Campaign</th>
+                        <th>Engagement</th>
+                        <?php 
+                        
+                        foreach ($results_chat_2 as $key => $value) {
+                            ?>
+                            <div class="elt" style="margin-bottom: 5px;">
+                            <tr> 
+                                <td>
+                                <span><?=$value['campagne']?></span>
+                            </td>
+                            <td class="value-box" style="background-color: rgba(241, 86, 250, 0.2);color: black">
+                            <span ><?=$value['value']?></span>
+                            </td>
+                            </tr>
+                                
+                            
+                            </div>
+                            <?php
+                        }
+                        ?>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
+
+
 
 
         <div class="card"> 
-            <div class="col-md-9">
-                <canvas id="productEngagementChart" width="400" height="200"></canvas>
-            </div>
-        </div>
-
-       <div class="card"> 
-            <div class="col-md-9">
-                <canvas id="campaignActionChart" width="400" height="200"></canvas>
+          <div class="row col-md-12">
+                <div class="col-md">
+                    <canvas id="productEngagementChart" width="400" height="200"></canvas>
+                </div>
+                <div class="col-md-3">
+                    <div class="legend">
+                    <table>
+                        <th>Produit</th>
+                        <th>Engagement</th>
+                        <?php 
+                        
+                        foreach ($results_chat_3 as $key => $value) {
+                            ?>
+                            <div class="elt" style="margin-bottom: 5px;">
+                            <tr> 
+                                <td>
+                                <span><?=$value['produit']?></span>
+                            </td>
+                            <td class="value-box" style="background-color: rgba(39, 245, 67, 0.2);color: black">
+                            <span ><?=$value['value']?></span>
+                            </td>
+                            </tr>
+                                
+                            
+                            </div>
+                            <?php
+                        }
+                        ?>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="card"> 
-            <div class="col-md-9">
-                <canvas id="plateformActionChart" width="400" height="200"></canvas>
-            </div>
-        </div>
-        
-        <div class="card"> 
-            <div class="col-md-9">
-                <canvas id="productActionChart" width="400" height="200"></canvas>
+          <div class="row col-md-12">
+                <div class="col-md">
+                    <canvas id="campaignActionChart" width="400" height="200"></canvas>
+                </div>
+                <div class="col-md-5">
+                    <div class="legend">
+                    <table>
+                        <th>Campagne</th>
+                        <th>KPI</th>
+                        <?php 
+                        
+                        foreach ($results_chat_4 as $key => $value) {
+                            ?>
+                            <div class="elt" style="margin-bottom: 5px;">
+                            <tr> 
+                                <td>
+                                <span><?=$value['campagne']?></span>
+                            </td>
+                            <td class="value-box" style="background-color: rgba(245, 234, 39, 0.2);color: black">
+                            <span ><?=$value['kpi']?></span>
+                            </td>
+                            </tr>
+                                
+                            
+                            </div>
+                            <?php
+                        }
+                        ?>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
 
+        <div class="card"> 
+          <div class="row col-md-12">
+                <div class="col-md">
+                    <canvas id="plateformActionChart" width="400" height="200"></canvas>
+                </div>
+                <div class="col-md-3">
+                    <div class="legend">
+                    <table>
+                        <th>Platform</th>
+                        <th>KPI</th>
+                        <?php 
+                        
+                        foreach ($results_chat_5 as $key => $value) {
+                            ?>
+                            <div class="elt" style="margin-bottom: 5px;">
+                            <tr> 
+                                <td>
+                                <span><?=$value['platform']?></span>
+                            </td>
+                            <td class="value-box" style="background-color: rgba(54, 39, 245, 0.2);color: black">
+                            <span ><?=$value['kpi']?></span>
+                            </td>
+                            </tr>
+                                
+                            
+                            </div>
+                            <?php
+                        }
+                        ?>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div class="card"> 
+          <div class="row col-md-12">
+                <div class="col-md">
+                    <canvas id="productActionChart" width="400" height="200"></canvas>
+                </div>
+                <div class="col-md-3">
+                    <div class="legend">
+                    <table>
+                        <th>Produit</th>
+                        <th>KPI</th>
+                        <?php 
+                        
+                        foreach ($results_chat_6 as $key => $value) {
+                            ?>
+                            <div class="elt" style="margin-bottom: 5px;">
+                            <tr> 
+                                <td>
+                                <span><?=$value['produit']?></span>
+                            </td>
+                            <td class="value-box" style="background-color: rgba(245, 39, 39, 0.2);color: black">
+                            <span ><?=$value['kpi']?></span>
+                            </td>
+                            </tr>
+                                
+                            
+                            </div>
+                            <?php
+                        }
+                        ?>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
 
 
     </div>
@@ -1598,6 +1951,63 @@ $ObjectifData[] = array(
 document.addEventListener("DOMContentLoaded", function() 
 
 {
+    
+
+ // Récupérez l'élément canvas
+ var canvas = document.getElementById("actionkipsChart");
+
+// Parsez les données JSON récupérées du PHP
+var nb_action_KpiData = <?php echo $nb_action_kpiDataJSON; ?>;
+console.log(nb_action_KpiData)
+// Créez des tableaux pour les labels de plateforme et les valeurs d'engagement
+var labels = nb_action_KpiData.map(function(item) {
+    return item.kpi;
+});
+
+var values = nb_action_KpiData.map(function(item) {
+    return item.value;
+});
+
+// Créez le diagramme en utilisant Chart.js
+var ctx = canvas.getContext("2d");
+new Chart(ctx, {
+    type: "bar",
+    data: {
+        labels: labels,
+        datasets: [{
+            label: "Nombre d'action par KPI",
+            data: values,
+            backgroundColor: "rgba(200, 186, 75, 0.8)",
+            borderColor: "rgba(75, 192, 192, 1)",
+            borderWidth: 1
+        }]
+    },
+    options: {
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        },
+        plugins: {
+            tooltip: {
+                enabled: true,
+                intersect: false, // Affiche les tooltips par défaut sans le survol
+                callbacks: {
+                    label: function(context) {
+                        var label = context.dataset.label || '';
+                        var value = context.parsed.y || 0;
+                        return label + ': ' + value;
+                    }
+                }
+            }
+        }
+    }
+});
+
+
+
+
+
 
  // Récupérez l'élément canvas
  var canvas = document.getElementById("kipsChart");
@@ -1848,7 +2258,17 @@ new Chart(ctx, {
                         beginAtZero: true
                     }
                 }
+            },
+            plugins: {
+            legend: {
+                display: true, // Affiche la légende
+                labels: {
+                    font: {
+                        size: 12 // Ajustez la taille de la police de la légende selon vos besoins
+                    }
+                }
             }
+        }
         });
 
 
@@ -1880,7 +2300,20 @@ new Chart(ctx, {
                         beginAtZero: true
                     }
                 }
+            },
+            plugins: {
+            tooltip: {
+                enabled: true,
+                intersect: false, // Affiche les tooltips par défaut sans le survol
+                callbacks: {
+                    label: function(context) {
+                        var label = context.dataset.label || '';
+                        var value = context.parsed.y || 0;
+                        return label + ': ' + value;
+                    }
+                }
             }
+        }
         });
 
 
